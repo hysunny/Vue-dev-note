@@ -1,0 +1,13 @@
+/app/public/views/widget
+/node_modules
+/npm-debug.log
+/app/logs
+node_modules/**
+.DS_Store
+.idea/**
+dist
+dist/**/*
+.DS_store
+webpack.map.json
+resource.map.json
+.vscode/**

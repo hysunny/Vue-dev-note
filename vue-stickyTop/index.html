@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>vue-stickyTop</title>
+  <meta charset="utf-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="renderer" content="webkit"/>
+  <meta http-equiv="Cache-Control" content="no-transform "/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <script src="https://unpkg.com/lodash@4.17.4/lodash.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script type="text/javascript">
+    (function(window){
+      var html = document.querySelector("html");
+      html.style.fontSize = html.offsetWidth/7.5 + "px",
+        window.onresize = function(){
+          var a = document.querySelector("html");
+          a.style.fontSize = a.offsetWidth/7.5 + "px"
+        };
+    })(window)
+  </script>
+  <style type="text/css">
+    html, body, div, ul, li {
+      padding: 0;
+      margin: 0;
+      color: #333;
+      font-size: 0.3rem;
+      background: lightgreen;
+    }
+    .header {
+      background: pink;
+      height: 3rem;
+      line-height: 3rem;
+      text-align: center;
+    }
+    
+    .switch-bar {
+      width: 100%;
+      height: 1rem;
+      line-height: 1rem;
+      display: flex;
+      text-align: center;
+      background: gold;
+    }
+    .switch-bar a {
+      flex: 1;
+      text-decoration: none;
+      color: white;
+    }
+    .switch-bar a:hover, .switch-bar a.router-link-active {
+      color: #999;
+    }
+    .list {
+      list-style: none;
+      background: lightgreen;
+      padding: 0 .3rem;
+    }
+    .list li {
+      padding: .5rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    .home.fix .switch-bar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <router-view></router-view>
+</div>
+
+<script type="text/javascript">
+  const Home = {
+    template: `
+		  	<div class="home" :class="{'fix': isFix}">
+		    	<header class="header">header</header>
+		      <div class="switch-bar">
+		        <router-link to="/products">产品</router-link>
+		        <router-link to="/orders">订单</router-link>
+		        <router-link to="/docs">文档</router-link>
+		      </div>
+		      <div class="content" :style="{
+				    'minHeight': contentMinHeight + 'px',
+				    'marginTop': contentMarginTop + 'px'
+				    }">
+		      	<router-view></router-view>
+		      </div>
+				</div>`,
+    data() {
+      return {
+        isFix: false,
+        headerHeight: 0,
+        scrollTop: 0,
+        scrollHeight: 0,
+        switchBarHeight: 0,
+        throttleScroll: null
+      }
+    },
+    computed: {
+      contentMinHeight() {
+        const windowHeight = document.documentElement.clientHeight
+        return this.isFix ? windowHeight - this.switchBarHeight : windowHeight - this.headerHeight - this.switchBarHeight
+      },
+      contentMarginTop() {
+        return this.isFix ? this.switchBarHeight : 0
+      }
+    },
+    watch: {
+      '$route'(to, from) {
+        this.$nextTick(() => {
+          if (this.isFix) {
+          window.scrollTo(0, 0)  // 兼容chrome
+          window.scrollTo(0, this.headerHeight)
+        } else {
+          window.scrollTo(0, 0)
+        }
+      })
+      }
+    },
+    methods: {
+      handleScroll() {
+        this.setData()
+        // 判断是否吸顶效果
+        if (this.scrollTop >= this.headerHeight) {
+          this.isFix = true
+        } else {
+          this.isFix = false
+        }
+      },
+      setData() {
+        this.headerHeight = this.$el.querySelector('.header').clientHeight
+        this.switchBarHeight = this.$el.querySelector('.switch-bar').clientHeight
+        this.scrollTop = document.documentElement.scrollTop || window.pageYOffset || document.body.scrollTop
+        this.scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight
+      }
+    },
+    mounted() {
+      this.$nextTick(() => {
+        // 节流监听滚动事件
+        window.addEventListener('scroll', this.throttleScroll, false)
+    })
+      this.throttleScroll = _.throttle(this.handleScroll, 100)
+    },
+    destoryed() {
+      window.removeEventListener('scroll', this.throttleScroll)
+    }
+  }
+  const Products = {
+    template:
+      `
+		  	<ul class="list products">
+		  		<li v-for="item in list" :key="item.id">
+		  			{{ item.name }}
+		  		</li>
+		  	</ul>
+		  `,
+    data() {
+      return {
+        list: []
+      }
+    },
+    created() {
+      axios.get('/products')
+        .then(response => {
+        console.log(response);
+    })
+    .catch(error => {
+        this.list = productList
+      console.log(error);
+    });
+    }
+    
+  }
+  const Orders = {
+    template:
+      `
+		  	<ul class="list orders">
+		  		<li v-for="item in list" :key="item.id">
+		  			{{ item.name }}
+		  		</li>
+		  	</ul>
+		  `,
+    data() {
+      return {
+        list: []
+      }
+    },
+    created() {
+      axios.get('/orders')
+        .then(response => {
+        console.log(response);
+    })
+    .catch(error => {
+        this.list = orderList
+      console.log(error);
+    });
+    }
+  }
+  const Docs = {
+    template:
+      `
+		  	<ul class="list docs">
+		  		<li v-for="item in list" :key="item.id">
+		  			{{ item.name }}
+		  		</li>
+		  	</ul>
+		  `,
+    data() {
+      return {
+        list: []
+      }
+    },
+    created() {
+      axios.get('/docs')
+        .then(response => {
+        console.log(response);
+    })
+    .catch(error => {
+        this.list = docList
+      console.log(error);
+    });
+    }
+  }
+  
+  const routes = [{
+    path: '/',
+    component: Home,
+    children: [{
+      path: '',
+      component: Products
+    }, {
+      path: 'products',
+      component: Products
+    }, {
+      path: 'orders',
+      component: Orders
+    }, {
+      path: 'docs',
+      component: Docs
+    }]
+  }]
+  
+  const router = new VueRouter({
+    routes
+  })
+  
+  const app = new Vue({
+    router
+  }).$mount('#app')
+  
+  const productList = [{
+    id: 1,
+    name: '产品1'
+  },
+    {
+      id: 2,
+      name: '产品2'
+    },
+    {
+      id: 3,
+      name: '产品3'
+    }]
+  
+  const orderList = [{
+    id: 1,
+    name: '订单1'
+  },
+    {
+      id: 2,
+      name: '订单2'
+    },
+    {
+      id: 3,
+      name: '订单3'
+    },
+    {
+      id: 4,
+      name: '订单4'
+    },
+    {
+      id: 5,
+      name: '订单5'
+    },
+    {
+      id: 6,
+      name: '订单6'
+    },
+    {
+      id: 7,
+      name: '订单7'
+    },
+    {
+      id: 8,
+      name: '订单8'
+    },
+    {
+      id: 9,
+      name: '订单9'
+    },{
+      id: 10,
+      name: '订单10'
+    },
+    {
+      id: 11,
+      name: '订单11'
+    },
+    {
+      id: 12,
+      name: '订单12'
+    },
+    {
+      id: 13,
+      name: '订单13'
+    },
+    {
+      id: 14,
+      name: '订单14'
+    },
+    {
+      id: 15,
+      name: '订单15'
+    }
+  ]
+  
+  const docList = [{
+    id: 1,
+    name: '文档1'
+  },
+    {
+      id: 2,
+      name: '文档2'
+    },
+    {
+      id: 3,
+      name: '文档3'
+    },
+    {
+      id: 4,
+      name: '文档4'
+    },
+    {
+      id: 5,
+      name: '文档5'
+    },
+    {
+      id: 6,
+      name: '文档6'
+    },
+    {
+      id: 7,
+      name: '文档7'
+    },
+    {
+      id: 8,
+      name: '文档8'
+    },
+    {
+      id: 9,
+      name: '文档9'
+    },
+    {
+      id: 10,
+      name: '文档10'
+    }]
+</script>
+</body>
+</html>

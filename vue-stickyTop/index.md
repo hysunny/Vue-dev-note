@@ -4,7 +4,11 @@
 
 1. 初始情况下页面布局如下图所示：
 
+![vue-stickyTop](./images/vue-stickyTop.png)
+
 2. 当页面滚动距离大于`header`时，`switch-bar`将固定在顶部
+
+![vue-stickyTop-fix](./images/vue-stickyTop-fix.png)
 
 3. 3个列表可以来回切换
 
@@ -13,6 +17,8 @@
 5. 3个列表数据均为异步获取
 
 最后的实现效果（简单示例）如下：
+
+![vue-stickyTop](./images/vue-stickyTop.gif)
 
 
 下面我们来看下如果实现这个`sticky`效果。
@@ -130,6 +136,8 @@ if (this.scrollTop >= this.headerHeight) {
 ```
 
 做完以上3点其实大部分工作就完成了，这时的运行效果如下：
+
+![vue-stickyTop-not-perfect](./images/vue-stickyTop-not-perfect.gif)
 
 有两个问题：
 
